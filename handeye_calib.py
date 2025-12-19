@@ -199,19 +199,19 @@ def main():
                         A_list, B_list, apriltag_info, apriltag_imgs_raw, q_rad_list, q_deg_list)
         elif key == 'c':
             print("[INFO]   Number of samples:", len(A_list), len(B_list))
-            print("[INFO] saving A and B lists to handeye_data_A.pkl and handeye_data_B.pkl")
-            with open('handeye_data_A.pkl', 'wb') as f:
+            print("[INFO] saving A and B lists to handeye_data_A_new.pkl and handeye_data_B_new.pkl")
+            with open('handeye_data_A_new.pkl', 'wb') as f:
                 pickle.dump(A_list, f)
-            with open('handeye_data_B.pkl', 'wb') as f:
+            with open('handeye_data_B_new.pkl', 'wb') as f:
                 pickle.dump(B_list, f)
-            print("[INFO] saving april tag image raw data to apriltag_imgs_raw.pkl")
-            with open('apriltag_imgs_raw.pkl', 'wb') as f:
+            print("[INFO] saving april tag image raw data to apriltag_imgs_raw_new.pkl")
+            with open('apriltag_imgs_raw_new.pkl', 'wb') as f:
                 pickle.dump(apriltag_imgs_raw, f)
-            print("[INFO] saving joint angles (rad) to q_rad_list.pkl and (deg) to q_deg_list.pkl")
+            print("[INFO] saving joint angles (rad) to q_rad_list_new.pkl and (deg) to q_deg_list_new.pkl")
 
-            with open('q_rad_list.pkl', 'wb') as f:
+            with open('q_rad_list_new.pkl', 'wb') as f:
                 pickle.dump(q_rad_list, f)
-            with open('q_deg_list.pkl', 'wb') as f:
+            with open('q_deg_list_new.pkl', 'wb') as f:
                 pickle.dump(q_deg_list, f)
 
             compute_handeye(solver, A_list, B_list)
