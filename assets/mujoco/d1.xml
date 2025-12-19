@@ -2,15 +2,15 @@
   <compiler angle="radian" meshdir="../" autolimits="true"/>
 
   <asset>
-    <mesh name="base_link" file="d1_assets/stl/base_link.STL"/>
-    <mesh name="Link1" file="d1_assets/stl/Link1.STL"/>
-    <mesh name="Link2" file="d1_assets/stl/Link2.STL"/>
-    <mesh name="Link3" file="d1_assets/stl/Link3.STL"/>
-    <mesh name="Link4" file="d1_assets/stl/Link4.STL"/>
-    <mesh name="Link5" file="d1_assets/stl/Link5.STL"/>
-    <mesh name="Link6" file="d1_assets/stl/Link6.STL"/>
-    <mesh name="Link7_1" file="d1_assets/stl/Link7_1.STL"/>
-    <mesh name="Link7_2" file="d1_assets/stl/Link7_2.STL"/>
+    <mesh name="base_link" file="d1_assets/base_link.STL"/>
+    <mesh name="Link1" file="d1_assets/Link1.STL"/>
+    <mesh name="Link2" file="d1_assets/Link2.STL"/>
+    <mesh name="Link3" file="d1_assets/Link3.STL"/>
+    <mesh name="Link4" file="d1_assets/Link4.STL"/>
+    <mesh name="Link5" file="d1_assets/Link5.STL"/>
+    <mesh name="Link6" file="d1_assets/Link6.STL"/>
+    <mesh name="Link7_1" file="d1_assets/Link7_1.STL"/>
+    <mesh name="Link7_2" file="d1_assets/Link7_2.STL"/>
   </asset>
 
   <worldbody>

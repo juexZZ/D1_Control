@@ -98,6 +98,7 @@ def take_sample(camera, tag_pose_tracker, solver, d1_model, cpp_exe_path,
 
     # A = hand pose
     A, q_rad, q_deg = d1_model.getGripperPose(cpp_exe_path)
+
     print("hand pose", A)
     q_rad_list.append(q_rad)
     q_deg_list.append(q_deg)
