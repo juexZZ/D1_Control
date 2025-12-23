@@ -1,0 +1,3 @@
+[submodule "pyroki_ik/pyroki"]
+	path = pyroki_ik/pyroki
+	url = https://github.com/chungmin99/pyroki.git
