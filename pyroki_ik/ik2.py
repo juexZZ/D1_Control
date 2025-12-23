@@ -5,37 +5,37 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # def draw_pose(pos, orn, length=0.1):
-#     """在给定位置绘制姿态坐标轴（X红，Y绿，Z蓝）"""
+#     """Draw pose coordinate axes at a given position (X=red, Y=green, Z=blue)."""
 #     rot = R.from_quat(orn).as_matrix()
 #     x_axis = pos + rot[:, 0] * length
 #     y_axis = pos + rot[:, 1] * length
 #     z_axis = pos + rot[:, 2] * length
-
-#     p.addUserDebugLine(pos, x_axis, [1, 0, 0], lineWidth=3, lifeTime=0)  # X - 红
-#     p.addUserDebugLine(pos, y_axis, [0, 1, 0], lineWidth=3, lifeTime=0)  # Y - 绿
-#     p.addUserDebugLine(pos, z_axis, [0, 0, 1], lineWidth=3, lifeTime=0)  # Z - 蓝
+#
+#     p.addUserDebugLine(pos, x_axis, [1, 0, 0], lineWidth=3, lifeTime=0)  # X - red
+#     p.addUserDebugLine(pos, y_axis, [0, 1, 0], lineWidth=3, lifeTime=0)  # Y - green
+#     p.addUserDebugLine(pos, z_axis, [0, 0, 1], lineWidth=3, lifeTime=0)  # Z - blue
 
 def draw_pose(pos, orn, length=0.1, label=""):
-    """绘制某个位置的姿态坐标系（X红，Y绿，Z蓝）"""
+    """Draw pose coordinate axes at a given position (X=red, Y=green, Z=blue)."""
     rot = R.from_quat(orn).as_matrix()
     x_axis = pos + rot[:, 0] * length
     y_axis = pos + rot[:, 1] * length
     z_axis = pos + rot[:, 2] * length
 
-    p.addUserDebugLine(pos, x_axis, [1, 0, 0], lineWidth=3, lifeTime=0)  # X - 红
-    p.addUserDebugLine(pos, y_axis, [0, 1, 0], lineWidth=3, lifeTime=0)  # Y - 绿
-    p.addUserDebugLine(pos, z_axis, [0, 0, 1], lineWidth=3, lifeTime=0)  # Z - 蓝
+    p.addUserDebugLine(pos, x_axis, [1, 0, 0], lineWidth=3, lifeTime=0)  # X - red
+    p.addUserDebugLine(pos, y_axis, [0, 1, 0], lineWidth=3, lifeTime=0)  # Y - green
+    p.addUserDebugLine(pos, z_axis, [0, 0, 1], lineWidth=3, lifeTime=0)  # Z - blue
 
     if label:
         p.addUserDebugText(label, pos, textColorRGB=[1, 1, 1], textSize=1.2, lifeTime=0)
 
 
-# 初始化仿真
+# Initialize simulation
 physicsClient = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 p.setGravity(0, 0, -9.8)
 
-# # 转换base坐标轴朝向
+# # Transform base coordinate axis orientation
 # rot_mat = np.array([
 #     [0, 0, 1],  # X_new = -Y_old
 #     [1, 0, 0],  # Y_new =  Z_old
@@ -50,18 +50,18 @@ p.setGravity(0, 0, -9.8)
 #     useFixedBase=True
 # )
 
-# 加载 URDF
+# Load URDF
 robot_id = p.loadURDF("D:/aca/MM/vis_grasp/URDF/gripper/d1_description/urdf/d1_description.urdf",
                       basePosition=[0, 0, 0], useFixedBase=True)
 
-#可视化base坐标轴
+# Visualize base coordinate axes
 base_pos, base_orn = p.getBasePositionAndOrientation(robot_id)
 draw_pose(base_pos, base_orn, length=0.15, label="base")
 
-# 获取关节总数
+# Get total number of joints
 num_joints = p.getNumJoints(robot_id)
 
-# 提取每个 joint 的限制
+# Extract limits for each joint
 lower_limits = []
 upper_limits = []
 joint_ranges = []
@@ -93,7 +93,7 @@ for i in range(num_joints):
     joint_ranges.append(range_)
     rest_poses.append(rest)
 
-# 设置目标末端位姿
+# Set target end-effector pose
 # T = np.array([
 #     [-0.19678868, -0.01845381, -0.98027222,  0.0496546],
 #     [ 0.94862631, -0.25623472, -0.18561212, -0.04436804],
@@ -163,10 +163,10 @@ T = np.array([
 
 target_pos = T[:3, 3].tolist()
 target_orn = R.from_matrix(T[:3, :3]).as_quat().tolist()
-# 可视化目标末端姿态
+# Visualize target end-effector pose
 draw_pose(np.array(target_pos), target_orn, length=0.1, label="anygrasp_in_base")
 
-# 目标位姿矩阵 T (旧base坐标系定义的)
+# Target pose matrix T (defined in old base coordinate system)
 T_old = T.copy()
 
 # import sympy as sp
@@ -174,14 +174,14 @@ T_old = T.copy()
 # R_x = sp.Matrix([[1,0,0],[0,0,1],[0,-1,0]])
 # R_old2pb = R_x*R_y
 
-# # 旧base → PyBullet base 的旋转矩阵
+# # Rotation matrix from old base to PyBullet base
 # R_old2pb = np.array([
 #     [0, 0, 1],
 #     [1, 0, 0],
 #     [0, 1, 0]
 # ])
 
-# # 构造 4x4 齐次变换矩阵
+# # Construct 4x4 homogeneous transformation matrix
 # T_old2pb = np.eye(4)
 # T_old2pb[:3, :3] = R_old2pb
 
@@ -196,10 +196,10 @@ T_old = T.copy()
 # target_pos = T_new[:3, 3].tolist()
 # target_orn = R.from_matrix(T_new[:3, :3]).as_quat().tolist()
 
-# # 可视化新目标姿态（在 pybullet base 坐标系下）
+# # Visualize new target pose (in PyBullet base coordinate system)
 # draw_pose(np.array(target_pos), target_orn, length=0.1, label="target_in_pb_base")
 
-# 可视化相机在base下的位置
+# Visualize camera position in base frame
 # R_urdf_to_pb = np.array([
 #     [0,  0, 1],   # Z_urdf -> X_pb
 #     [1,  0, 0],   # X_urdf -> Y_pb
@@ -263,14 +263,14 @@ R_cam = R.from_matrix(T_cam_in_base[:3, :3]).as_quat().tolist()
 draw_pose(np.array(T_cam), R_cam, length=0.1, label="cam_in_base")
 
 
-# 获取末端 link 的索引（请确认是否为 link6）
-end_effector_link_index = 7  # 如果不确定可以用 p.getJointInfo(...) 查
+# Get end-effector link index (confirm if it is link6)
+end_effector_link_index = 7  # Use p.getJointInfo(...) to verify if unsure
 for i in range(p.getNumJoints(robot_id)):
     info = p.getJointInfo(robot_id, i)
     print(f"Joint Index: {i}, Joint Name: {info[1].decode('utf-8')}, Link Name: {info[12].decode('utf-8')}")
 
 
-# 执行 IK
+# Solve IK
 joint_angles = p.calculateInverseKinematics(
     robot_id,
     end_effector_link_index,
@@ -284,11 +284,11 @@ joint_angles = p.calculateInverseKinematics(
     residualThreshold=1e-6
 )
 
-# 提取前6个 revolute 关节角度
+# Extract first 6 revolute joint angles
 solution = [joint_angles[i] for i in revolute_joint_indices[:6]]
 
-# 输出结果
-print("计算得到的关节角度（弧度）：")
+# Output results
+print("Computed joint angles (radians):")
 for i, angle in enumerate(solution):
     name = p.getJointInfo(robot_id, revolute_joint_indices[i])[1].decode('utf-8')
     lo = lower_limits[revolute_joint_indices[i]]
@@ -296,20 +296,20 @@ for i, angle in enumerate(solution):
     flag = "✅" if lo <= angle <= hi else "❌"
     print(f"{flag} {name}: {angle:.4f} rad ({np.degrees(angle):.2f}°)  ∈ [{np.degrees(lo):.1f}°, {np.degrees(hi):.1f}°]")
 
-# 应用角度
+# Apply joint angles
 revolute_joint_indices = [0, 0, 0, 0, 0, 0]
 for i, angle in zip(revolute_joint_indices[:6], solution):
     p.resetJointState(robot_id, i, angle)
 
-# 仿真运行
+# Run simulation
 for _ in range(100000):
     p.stepSimulation()
     time.sleep(1/240)
 
-# 末端验证
+# End-effector verification
 end_state = p.getLinkState(robot_id, end_effector_link_index)
 actual_pos = end_state[0]
-print("实际末端位置：", np.round(actual_pos, 3))
-print("目标末端位置：", np.round(target_pos, 3))
+print("Actual end-effector position:", np.round(actual_pos, 3))
+print("Target end-effector position:", np.round(target_pos, 3))
 
 p.disconnect()

@@ -1,6 +1,6 @@
 import numpy as np
 
-# # 目标在相机坐标系下的位姿
+# # Target pose in camera coordinate system
 
 T_target_in_cam = np.array([
     [ 0.02277477, -0.99893260, -0.04018656,  0.01049047],
@@ -9,7 +9,7 @@ T_target_in_cam = np.array([
     [ 0.00000000,  0.00000000,  0.00000000,  1.00000000],
 ])
 
-# 相机在机械臂基座下的位姿
+# Camera pose in robot arm base frame
 
 T_cam_in_base = np.array([
     [ 0.01854991, -0.22026411,  0.97526387,  0.36235041],
@@ -18,7 +18,7 @@ T_cam_in_base = np.array([
     [ 0.        ,  0.        ,  0.        ,  1.        ],
 ])
 
-# 轴对齐转换
+# Axis alignment transformation
 T_align = np.array([
     [0,  0,  1,  0],
     [0,  -1,  0,  0],
@@ -26,10 +26,10 @@ T_align = np.array([
     [0,  0,  0,  1],
 ])
 
-# 先把anygrasp抓取姿态调整到工具轴约定下，再投影到基座系
+# First adjust AnyGrasp grasp pose to tool axis convention, then project to base frame
 # T_target_in_base = T_cam_in_base @ T_target_in_cam
 T_target_in_base = T_cam_in_base @ (T_target_in_cam @ T_align)
 
-# 输出
-print("目标在机械臂基座坐标系下的位姿:")
+# Output
+print("Target pose in robot arm base coordinate system:")
 print(T_target_in_base)

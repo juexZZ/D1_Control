@@ -68,17 +68,17 @@ def load_cloud_and_grippers(saved_dir):
 
     grippers = []
     for gripper_path in sorted(glob.glob(os.path.join(saved_dir, "gripper_*.ply"))):
-        # 自动判断是点云还是 mesh
+        # Automatically determine if point cloud or mesh
         mesh = o3d.io.read_triangle_mesh(gripper_path)
         # if mesh.has_vertices() and mesh.has_triangles():
         grippers.append(mesh)
         # else:
-        #     # fallback: 尝试读取为点云
+        #     # fallback: Try to read as point cloud
         #     pc = o3d.io.read_point_cloud(gripper_path)
         #     grippers.append(pc)
     return cloud, grippers
 
-# === 示例使用 ===
+# === Example usage ===
 saved_dir = "out_filter_grasp_test"
 # saved_dir = "out_clouds"
 cloud, grippers = load_cloud_and_grippers(saved_dir)
@@ -91,7 +91,7 @@ print(grippers)
 
 
 
-# 确保你的 config 提供了保存路径
+# Ensure your config provides a save path
 save_path = "poses2.jpg"
 
 scene = True
@@ -101,7 +101,7 @@ gripper = True
 visualize_cloud_geometries(
     cloud,
     grippers,
-    visualize=False,  # 避免弹窗，适合 headless 服务器
+    visualize=False,  # Avoid pop-up, suitable for headless server
     save_file=save_path,
     render_scene = scene,
     render_coord = coord,
