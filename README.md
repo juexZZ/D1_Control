@@ -17,3 +17,4 @@ NOTE that pyroki is tied to a specific commit head `f234516fe12c57795f31ca4b4fc9
 For pyroki env installation, refer to their (repo)[https://github.com/chungmin99/pyroki]
 
 
+conda activate hand-eye
