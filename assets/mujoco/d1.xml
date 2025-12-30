@@ -49,6 +49,10 @@
                   <joint name="Joint7_2" pos="0 0 0" axis="0 0 1" type="slide" range="-0.03 0"/>
                   <geom type="mesh" rgba="1 1 1 1" mesh="Link7_2"/>
                 </body>
+                <body name="camera" pos="-0.06622028 0.03862954 0.03385704" quat="1 0 0 0">
+                  <geom type="sphere" size="0.01" rgba="1 0 0 1"/>
+                  <camera name="camera" pos="0 0 0" zaxis="0 0 -1"/>
+                </body>
               </body>
             </body>
           </body>

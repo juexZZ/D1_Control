@@ -8,6 +8,7 @@ import numpy as np
 import subprocess
 import os
 
+
 # -----------------------------------------
 # Camera callback to show color images
 # -----------------------------------------
@@ -18,7 +19,7 @@ def showImage(color_frame, depth_frame, ir1_frame, ir2_frame):
 # -----------------------------------------
 # Get joint angles from your C++ D1 SDK program
 # -----------------------------------------
-def get_joint_angles_from_cpp(exe_path="/home/doordash/Desktop/.../get_arm_joint_angle"):
+def get_joint_angles_from_cpp(exe_path="/home/doordash/Desktop/.../get_joint_angle"):
     """
     Calls the C++ executable that prints joint angles in degrees,
     and converts them to radians for Pinocchio.
@@ -140,6 +141,11 @@ def compute_handeye(solver, A_list, B_list):
         print("X (hand-to-eye transform):\n", X)
         print("Y (base-to-tag transform):\n", Y)
         print("==================================\n")
+
+        with open('handeye_calibration_result.pkl', 'wb') as f:
+             pickle.dump({'X': X, 'Y': Y}, f)
+        print("[INFO] Calibration result saved to handeye_result_unfiltered.pkl")
+
     except Exception as e:
         print("[ERROR] Calibration failed:", e)
         A_list.clear()
@@ -193,34 +199,42 @@ def main():
     print("  q -> quit")
     print("----------------------------\n")
 
-    while True:
-        key = input("Enter command [s/c/q]: ").strip().lower()
-        if key == 's':
-            take_sample(camera, tag_pose_tracker, solver, d1_model, cpp_exe_path,
-                        A_list, B_list, apriltag_info, apriltag_imgs_raw, q_rad_list, q_deg_list)
-        elif key == 'c':
-            print("[INFO]   Number of samples:", len(A_list), len(B_list))
-            print("[INFO] saving A and B lists to handeye_data_A.pkl and handeye_data_B.pkl")
-            with open('handeye_data_A.pkl', 'wb') as f:
-                pickle.dump(A_list, f)
-            with open('handeye_data_B.pkl', 'wb') as f:
-                pickle.dump(B_list, f)
-            print("[INFO] saving april tag image raw data to apriltag_imgs_raw.pkl")
-            with open('apriltag_imgs_raw.pkl', 'wb') as f:
-                pickle.dump(apriltag_imgs_raw, f)
-            print("[INFO] saving joint angles (rad) to q_rad_list.pkl and (deg) to q_deg_list.pkl")
+    try:
+        while True:
+            key = input("Enter command [s/c/q]: ").strip().lower()
+            if key == 's':
+                take_sample(camera, tag_pose_tracker, solver, d1_model, cpp_exe_path,
+                            A_list, B_list, apriltag_info, apriltag_imgs_raw, q_rad_list, q_deg_list)
+            elif key == 'c':
+                print("[INFO]   Number of samples:", len(A_list), len(B_list))
+                print("[INFO] saving A and B lists to handeye_data_A.pkl and handeye_data_B.pkl")
+                with open('handeye_data_A.pkl', 'wb') as f:
+                    pickle.dump(A_list, f)
+                with open('handeye_data_B.pkl', 'wb') as f:
+                    pickle.dump(B_list, f)
+                print("[INFO] saving april tag image raw data to apriltag_imgs_raw.pkl")
+                with open('apriltag_imgs_raw.pkl', 'wb') as f:
+                    pickle.dump(apriltag_imgs_raw, f)
+                print("[INFO] saving joint angles (rad) to q_rad_list.pkl and (deg) to q_deg_list.pkl")
 
-            with open('q_rad_list.pkl', 'wb') as f:
-                pickle.dump(q_rad_list, f)
-            with open('q_deg_list.pkl', 'wb') as f:
-                pickle.dump(q_deg_list, f)
+                with open('q_rad_list.pkl', 'wb') as f:
+                    pickle.dump(q_rad_list, f)
+                with open('q_deg_list.pkl', 'wb') as f:
+                    pickle.dump(q_deg_list, f)
 
-            compute_handeye(solver, A_list, B_list)
-        elif key == 'q':
-            print("[INFO] Exiting.")
-            break
-        else:
-            print("[WARN] Unknown command")
+                compute_handeye(solver, A_list, B_list)
+            elif key == 'q':
+                print("[INFO] Exiting.")
+                break
+            else:
+                print("[WARN] Unknown command")
+    finally:
+        # Cleanup
+        print("[INFO] Releasing camera and closing windows...")
+        camera.close()           # Stops RealSense thread and pipeline
+        cv2.destroyAllWindows()  # Close OpenCV windows
+        print("[INFO] Done.")
+
 
 if __name__ == "__main__":
     main()
