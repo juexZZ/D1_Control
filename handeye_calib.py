@@ -7,6 +7,8 @@ import pinocchio as pin
 import numpy as np
 import subprocess
 import os
+import datetime
+import pickle
 
 
 # -----------------------------------------
@@ -129,12 +131,12 @@ def take_sample(camera, tag_pose_tracker, solver, d1_model, cpp_exe_path,
 # -----------------------------------------
 # Compute hand-eye calibration
 # -----------------------------------------
-def compute_handeye(solver, A_list, B_list):
+def compute_handeye(solver, A_list, B_list, out_dir=None):
     print("[INFO] Computing hand-eye calibration...")
     if len(A_list) < 3:
         print("[ERROR] Not enough samples (need at least 3)")
         return
-    
+
     try:
         X, Y = solver.solve(A_list, B_list)
         print("\n=== Hand-Eye Calibration Result ===")
@@ -142,9 +144,16 @@ def compute_handeye(solver, A_list, B_list):
         print("Y (base-to-tag transform):\n", Y)
         print("==================================\n")
 
-        with open('handeye_calibration_result.pkl', 'wb') as f:
-             pickle.dump({'X': X, 'Y': Y}, f)
-        print("[INFO] Calibration result saved to handeye_result_unfiltered.pkl")
+        # Save into provided output directory if given
+        if out_dir is None:
+            out_path = 'handeye_result_unfiltered.pkl'
+        else:
+            os.makedirs(out_dir, exist_ok=True)
+            out_path = os.path.join(out_dir, 'handeye_result_unfiltered.pkl')
+
+        with open(out_path, 'wb') as f:
+            pickle.dump({'X': X, 'Y': Y}, f)
+        print(f"[INFO] Calibration result saved to {out_path}")
 
     except Exception as e:
         print("[ERROR] Calibration failed:", e)
@@ -191,7 +200,7 @@ def main():
     q_rad_list = []
     q_deg_list = []
 
-    print("\n--- Hand–Eye Calibration ---")
+    print("\n--- Hand-Eye Calibration ---")
     print("Press:")
     print("  s -> take sample")
     print("  c -> compute calibration")
@@ -207,22 +216,28 @@ def main():
                             A_list, B_list, apriltag_info, apriltag_imgs_raw, q_rad_list, q_deg_list)
             elif key == 'c':
                 print("[INFO]   Number of samples:", len(A_list), len(B_list))
-                print("[INFO] saving A and B lists to handeye_data_A.pkl and handeye_data_B.pkl")
-                with open('handeye_data_A.pkl', 'wb') as f:
+                # Create timestamped output folder under calib_results
+                timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                save_dir = os.path.join('calib_results', timestamp)
+                os.makedirs(save_dir, exist_ok=True)
+
+                print(f"[INFO] saving A and B lists to {save_dir}")
+                with open(os.path.join(save_dir, 'handeye_data_A.pkl'), 'wb') as f:
                     pickle.dump(A_list, f)
-                with open('handeye_data_B.pkl', 'wb') as f:
+                with open(os.path.join(save_dir, 'handeye_data_B.pkl'), 'wb') as f:
                     pickle.dump(B_list, f)
-                print("[INFO] saving april tag image raw data to apriltag_imgs_raw.pkl")
-                with open('apriltag_imgs_raw.pkl', 'wb') as f:
-                    pickle.dump(apriltag_imgs_raw, f)
-                print("[INFO] saving joint angles (rad) to q_rad_list.pkl and (deg) to q_deg_list.pkl")
 
-                with open('q_rad_list.pkl', 'wb') as f:
-                    pickle.dump(q_rad_list, f)
-                with open('q_deg_list.pkl', 'wb') as f:
-                    pickle.dump(q_deg_list, f)
+                # print("[INFO] saving april tag image raw data to apriltag_imgs_raw.pkl")
+                # with open(os.path.join(save_dir, 'apriltag_imgs_raw.pkl'), 'wb') as f:
+                #     pickle.dump(apriltag_imgs_raw, f)
 
-                compute_handeye(solver, A_list, B_list)
+                # print("[INFO] saving joint angles (rad) to q_rad_list.pkl and (deg) to q_deg_list.pkl")
+                # with open(os.path.join(save_dir, 'q_rad_list.pkl'), 'wb') as f:
+                #     pickle.dump(q_rad_list, f)
+                # with open(os.path.join(save_dir, 'q_deg_list.pkl'), 'wb') as f:
+                #     pickle.dump(q_deg_list, f)
+
+                compute_handeye(solver, A_list, B_list, out_dir=save_dir)
             elif key == 'q':
                 print("[INFO] Exiting.")
                 break

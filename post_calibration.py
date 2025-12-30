@@ -1,18 +1,60 @@
 import numpy as np
 import pickle
 from SimpleHandEye.solvers import OpenCVSolver
+import os
+import glob
+
+# Find calib folder: prefer latest under 'calib_results', otherwise ask user
+print("Find calib folder: prefer latest under 'calib_results', otherwise ask user...")
+base_calib_dir = 'calib_results'
+if os.path.isdir(base_calib_dir):
+    subdirs = [os.path.join(base_calib_dir, d) for d in os.listdir(base_calib_dir)
+               if os.path.isdir(os.path.join(base_calib_dir, d))]
+    if subdirs:
+        latest = max(subdirs, key=os.path.getmtime)
+        print(f"Found latest calib folder: {latest}")
+        use_latest = input("Use this folder? [Y/n]: ").strip().lower() or 'y'
+        if use_latest == 'n':
+            data_folder = input("Enter calib folder path: ").strip()
+        else:
+            data_folder = latest
+    else:
+        data_folder = input("No calib subfolders found. Enter calib folder path: ").strip()
+else:
+    data_folder = input("calib_results not found. Enter calib folder path: ").strip()
+
+# Normalize
+data_folder = os.path.expanduser(data_folder)
+
+def load_pkl_from_folder(filename):
+    path = os.path.join(data_folder, filename)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Expected file not found: {path}")
+    with open(path, 'rb') as f:
+        return pickle.load(f)
 
 # -------------------------------
 # Load data
 # -------------------------------
-with open('handeye_data_A.pkl', 'rb') as f:
-    A_list = pickle.load(f)
+A_list = load_pkl_from_folder('handeye_data_A.pkl')
+B_list = load_pkl_from_folder('handeye_data_B.pkl')
 
-with open('handeye_data_B.pkl', 'rb') as f:
-    B_list = pickle.load(f)
+# Try to find initial unfiltered result in the same folder
+print("Try to find initial unfiltered result in the same folder...")
+result_candidates = glob.glob(os.path.join(data_folder, 'handeye_result_unfiltered*.pkl'))
+if result_candidates:
+    result_path = result_candidates[0]
+    print(f"Loading initial result from {result_path}")
+    with open(result_path, 'rb') as f:
+        result = pickle.load(f)
+else:
+    # fall back to asking user
+    manual = input("No initial unfiltered result found in folder. Enter path to initial result pkl (or leave blank to abort): ").strip()
+    if manual == '':
+        raise FileNotFoundError("No initial result provided; cannot compute error norms.")
+    with open(os.path.expanduser(manual), 'rb') as f:
+        result = pickle.load(f)
 
-with open('handeye_result_unfiltered_dec-22.pkl', 'rb') as f:
-    result = pickle.load(f)
 X_init = result['X']
 Y_init = result['Y']
 
@@ -80,6 +122,7 @@ if __name__ == "__main__":
         print("=============================================")
 
         # Optionally save new calibration
-        with open('handeye_result_filtered.pkl', 'wb') as f:
+        out_path = os.path.join(data_folder, 'handeye_result_filtered.pkl')
+        with open(out_path, 'wb') as f:
             pickle.dump({'X': X_new, 'Y': Y_new, 'filtered_indices': filtered_indices}, f)
-        print("[INFO] Filtered calibration result saved to 'handeye_result_filtered.pkl'.")
+        print(f"[INFO] Filtered calibration result saved to '{out_path}'.")
