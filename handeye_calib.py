@@ -9,6 +9,7 @@ import subprocess
 import os
 import datetime
 import pickle
+from handeye_utils import compute_camera_base_from_AX, save_npy
 
 
 # -----------------------------------------
@@ -109,14 +110,15 @@ def take_sample(camera, tag_pose_tracker, solver, d1_model, cpp_exe_path,
     # Image from camera
     img = camera.color_frame.copy()
 
-    # B = tag pose (tag_T_cam)
+    # ApriltagTracker returns cam_T_tag (camera pose in tag frame)
     info = tag_pose_tracker.getPoseAndCorners(img, tag_id=42)
     if info is None:
         print("[WARN] Tag not detected, skipping sample")
         return
 
-    B = np.linalg.inv(info['pose'])
-    print("AprilTag pose (tag_T_cam):\n", info['pose'])
+    # For AX=YB with A=base_T_hand, X=hand_T_cam, Y=base_T_tag, we want B=tag_T_cam.
+    B = np.linalg.inv(info['pose'])  # tag_T_cam
+    print("AprilTag pose (cam_T_tag):\n", info['pose'])
 
     # Save data
     A_list.append(A)
@@ -142,6 +144,17 @@ def compute_handeye(solver, A_list, B_list, out_dir=None):
         print("\n=== Hand-Eye Calibration Result ===")
         print("X (hand-to-eye transform):\n", X)
         print("Y (base-to-tag transform):\n", Y)
+
+        # Derive camera_to_base (and base_to_camera) from A and X
+        cam_base = compute_camera_base_from_AX(A_list, X, B_list=B_list, Y_base_T_tag=Y)
+        print("base_T_cam (derived, medoid over samples):\n", cam_base.base_T_cam)
+        print("cam_T_base (derived):\n", cam_base.cam_T_base)
+        print(f"[INFO] base_T_cam selected sample index: {cam_base.selected_index}")
+        if cam_base.mean_fro_Ax_vs_YB is not None:
+            print(
+                f"[INFO] Consistency check ||(A@X) - (Y@B)||_F (B=tag_T_cam): "
+                f"mean={cam_base.mean_fro_Ax_vs_YB:.6f}, max={cam_base.max_fro_Ax_vs_YB:.6f}"
+            )
         print("==================================\n")
 
         # Save into provided output directory if given
@@ -152,8 +165,28 @@ def compute_handeye(solver, A_list, B_list, out_dir=None):
             out_path = os.path.join(out_dir, 'handeye_result_unfiltered.pkl')
 
         with open(out_path, 'wb') as f:
-            pickle.dump({'X': X, 'Y': Y}, f)
+            pickle.dump(
+                {
+                    'X': X,  # hand_T_cam
+                    'Y': Y,  # base_T_tag
+                    'base_T_cam': cam_base.base_T_cam,
+                    'cam_T_base': cam_base.cam_T_base,
+                    'base_T_cam_selected_index': cam_base.selected_index,
+                },
+                f,
+            )
         print(f"[INFO] Calibration result saved to {out_path}")
+
+        # Also save numpy outputs for convenient downstream loading
+        if out_dir is None:
+            np_out_dir = '.'
+        else:
+            np_out_dir = out_dir
+        print("[INFO] Saving numpy transforms...")
+        print(" -", save_npy(np_out_dir, 'hand_to_eye_unfiltered.npy', X))
+        print(" -", save_npy(np_out_dir, 'target_in_base_unfiltered.npy', Y))
+        print(" -", save_npy(np_out_dir, 'camera_to_base.npy', cam_base.cam_T_base))
+        print(" -", save_npy(np_out_dir, 'base_to_camera.npy', cam_base.base_T_cam))
 
     except Exception as e:
         print("[ERROR] Calibration failed:", e)

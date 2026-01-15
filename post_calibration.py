@@ -3,6 +3,7 @@ import pickle
 from SimpleHandEye.solvers import OpenCVSolver
 import os
 import glob
+from handeye_utils import compute_camera_base_from_AX, save_npy
 
 # Find calib folder: prefer latest under 'calib_results', otherwise ask user
 print("Find calib folder: prefer latest under 'calib_results', otherwise ask user...")
@@ -119,10 +120,36 @@ if __name__ == "__main__":
         print("\n=== Recomputed Hand-Eye Calibration Result ===")
         print("X (hand-to-eye transform):\n", X_new)
         print("Y (base-to-tag transform):\n", Y_new)
+        cam_base = compute_camera_base_from_AX(A_filtered, X_new, B_list=B_filtered, Y_base_T_tag=Y_new)
+        print("base_T_cam (derived, medoid over filtered samples):\n", cam_base.base_T_cam)
+        print("cam_T_base (derived):\n", cam_base.cam_T_base)
+        print(f"[INFO] base_T_cam selected filtered sample index: {cam_base.selected_index}")
+        if cam_base.mean_fro_Ax_vs_YB is not None:
+            print(
+                f"[INFO] Consistency check ||(A@X) - (Y@B)||_F (B=tag_T_cam) (filtered): "
+                f"mean={cam_base.mean_fro_Ax_vs_YB:.6f}, max={cam_base.max_fro_Ax_vs_YB:.6f}"
+            )
         print("=============================================")
 
         # Optionally save new calibration
         out_path = os.path.join(data_folder, 'handeye_result_filtered.pkl')
         with open(out_path, 'wb') as f:
-            pickle.dump({'X': X_new, 'Y': Y_new, 'filtered_indices': filtered_indices}, f)
+            pickle.dump(
+                {
+                    'X': X_new,  # hand_T_cam
+                    'Y': Y_new,  # base_T_tag
+                    'filtered_indices': filtered_indices,
+                    'base_T_cam': cam_base.base_T_cam,
+                    'cam_T_base': cam_base.cam_T_base,
+                    'base_T_cam_selected_index': cam_base.selected_index,
+                },
+                f,
+            )
         print(f"[INFO] Filtered calibration result saved to '{out_path}'.")
+
+        # Save numpy outputs for convenient downstream loading
+        print("[INFO] Saving numpy transforms...")
+        print(" -", save_npy(data_folder, 'hand_to_eye_filtered.npy', X_new))
+        print(" -", save_npy(data_folder, 'target_in_base_filtered.npy', Y_new))
+        print(" -", save_npy(data_folder, 'camera_to_base_filtered.npy', cam_base.cam_T_base))
+        print(" -", save_npy(data_folder, 'base_to_camera_filtered.npy', cam_base.base_T_cam))
