@@ -379,7 +379,7 @@
     type="revolute">
     <origin
       xyz="0.0825 -0.0010782 -0.023822"
-      rpy="-1.5708 0 -1.5708" />
+      rpy="-1.5708 -1.5708 -1.5708" />
     <parent
       link="Link5" />
     <child
@@ -509,4 +509,55 @@
         velocity="0" />
       <mimic joint="Joint7_1" multiplier="-1" offset="0"/>
     </joint>
+  <link
+    name="Link8">
+    <inertial>
+      <origin
+        xyz="0 0 0.05"
+        rpy="0 0 0" />
+      <mass
+        value="0.001" />
+      <inertia
+        ixx="1e-10"
+        ixy="0"
+        ixz="0"
+        iyy="1e-10"
+        iyz="0"
+        izz="1e-10" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <box
+          size="0.002 0.002 0.002" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <box
+          size="0.002 0.002 0.002" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Joint8"
+    type="fixed">
+    <origin
+      xyz="0 0 0.11"
+      rpy="0 0 0" />
+    <parent
+      link="Link6" />
+    <child
+      link="Link8" />
+  </joint>
 </robot>
